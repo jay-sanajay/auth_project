@@ -49,28 +49,98 @@ async def show_reset_form(token: str = Query(...)):
 
     return f"""
     <html>
-        <head><title>Reset Password</title></head>
+        <head>
+            <title>Reset Password</title>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                }}
+                .container {{
+                    background: white;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                    width: 350px;
+                }}
+                h2 {{
+                    margin-bottom: 20px;
+                    text-align: center;
+                }}
+                input {{
+                    width: 100%;
+                    padding: 10px;
+                    margin: 10px 0;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                }}
+                button {{
+                    width: 100%;
+                    padding: 10px;
+                    background-color: #007bff;
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }}
+                button:hover {{
+                    background-color: #0056b3;
+                }}
+                .error {{
+                    color: red;
+                    font-size: 14px;
+                    text-align: center;
+                }}
+            </style>
+        </head>
         <body>
-            <h2>Reset Your Password</h2>
-            <form action="/reset-password" method="post">
-                <input type="hidden" name="token" value="{token}" />
-                <label>New Password:</label><br/>
-                <input type="password" name="new_password" required/><br/><br/>
-                <button type="submit">Reset Password</button>
-            </form>
+            <div class="container">
+                <h2>Reset Your Password</h2>
+                <form id="resetForm" method="POST" action="/reset-password">
+                    <input type="hidden" name="token" value="{token}" />
+                    <label for="new_password">New Password:</label>
+                    <input type="password" id="new_password" name="new_password" required />
+                    <div id="error" class="error"></div>
+                    <button type="submit">Reset Password</button>
+                </form>
+            </div>
+
+            <script>
+                const form = document.getElementById("resetForm");
+                const passwordInput = document.getElementById("new_password");
+                const errorDiv = document.getElementById("error");
+
+                form.addEventListener("submit", function (event) {{
+                    const password = passwordInput.value;
+                    if (password.length < 6) {{
+                        event.preventDefault();
+                        errorDiv.textContent = "Password must be at least 6 characters.";
+                    }}
+                }});
+            </script>
         </body>
     </html>
     """
 
 @router.post("/reset-password")
-async def reset_password(token: str = Form(...), new_password: str = Form(...), db: AsyncSession = Depends(get_db)):
+async def reset_password(
+    token: str = Form(...),
+    new_password: str = Form(...),
+    db: AsyncSession = Depends(get_db)
+):
     email = verify_reset_token(token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
+
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     user.hashed_password = hash_password(new_password)
     await db.commit()
     return {"message": "Password has been reset successfully"}
