@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: fastapi-auth-app
+    env: python
+    region: oregon
+    buildCommand: ""
+    startCommand: "python main.py"
+    plan: free
