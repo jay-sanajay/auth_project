@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import engine, Base
-from .auth import router as auth_router
+from database import engine, Base
+from auth import router as auth_router
 import uvicorn
 import os
 
