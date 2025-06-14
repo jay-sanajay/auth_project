@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Form, Query
 from fastapi.responses import HTMLResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -8,7 +9,6 @@ from models import User
 from schemas import UserCreate, UserOut, ForgotPasswordRequest
 from utils import hash_password, verify_password, create_reset_token, verify_reset_token
 from email_utils import send_reset_email
-
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
     return new_user
 
 @router.post("/login")
-async def login(form_data=Depends(), db: AsyncSession = Depends(get_db)):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == form_data.username))
     user = result.scalars().first()
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -42,12 +42,25 @@ async def request_password_reset(data: ForgotPasswordRequest, db: AsyncSession =
     return {"message": "Password reset email sent"}
 
 @router.get("/reset-password", response_class=HTMLResponse)
-async def show_reset_form(token: str = Query(None)):
+async def show_reset_form(token: str = Query(...)):
     email = verify_reset_token(token)
     if not token or not email:
         return HTMLResponse(content="<h3>Invalid or expired token.</h3>", status_code=400)
 
-    return f"""... (copy HTML content from earlier for form here) ..."""
+    return f"""
+    <html>
+        <head><title>Reset Password</title></head>
+        <body>
+            <h2>Reset Your Password</h2>
+            <form action="/reset-password" method="post">
+                <input type="hidden" name="token" value="{token}" />
+                <label>New Password:</label><br/>
+                <input type="password" name="new_password" required/><br/><br/>
+                <button type="submit">Reset Password</button>
+            </form>
+        </body>
+    </html>
+    """
 
 @router.post("/reset-password")
 async def reset_password(token: str = Form(...), new_password: str = Form(...), db: AsyncSession = Depends(get_db)):
