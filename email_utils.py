@@ -7,7 +7,8 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 async def send_reset_email(to_email: str, token: str):
-    reset_link = f"http://localhost:8000/reset-password?token={token}"
+    reset_link = f"https://auth-project-2-vlqj.onrender.com/reset-password?token={token}"
+
     message = EmailMessage()
     message["From"] = EMAIL_SENDER
     message["To"] = to_email
