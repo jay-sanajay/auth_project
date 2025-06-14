@@ -3,11 +3,12 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from .database import get_db
-from .models import User
-from .schemas import UserCreate, UserOut, ForgotPasswordRequest
-from .utils import hash_password, verify_password, create_reset_token, verify_reset_token
-from .email_utils import send_reset_email
+from database import get_db
+from models import User
+from schemas import UserCreate, UserOut, ForgotPasswordRequest
+from utils import hash_password, verify_password, create_reset_token, verify_reset_token
+from email_utils import send_reset_email
+
 
 router = APIRouter()
 
