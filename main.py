@@ -1,24 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from auth import forgot_password, reset_password_form, reset_password_submit
+from auth import router as auth_router
 
 app = FastAPI()
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, use specific domains instead of "*"
+    allow_origins=["*"],  # Use specific origins in production
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers
-app.include_router(forgot_password)
-app.include_router(reset_password_form)
-app.include_router(reset_password_submit)
+app.include_router(auth_router)
 
-# Automatically create DB tables on startup
 @app.on_event("startup")
 async def startup():
     async with engine.begin() as conn:
